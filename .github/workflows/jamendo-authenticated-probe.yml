@@ -1,0 +1,25 @@
+name: CORPACIAO Jamendo authenticated metadata feasibility
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Test five Jamendo track IDs with private credentials
+        env:
+          JAMENDO_CLIENT_ID: ${{ secrets.JAMENDO_CLIENT_ID }}
+        run: python jamendo_credential_probe.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: corpaciao-jamendo-authenticated-feasibility
+          path: jamendo_auth_probe/API_COVERAGE_REPORT.json
+          if-no-files-found: warn
+          retention-days: 14

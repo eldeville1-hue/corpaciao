@@ -1,0 +1,28 @@
+name: CORPACIAO external acoustic feature audit
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/mtg-acoustic-audit.yml'
+permissions:
+  contents: read
+jobs:
+  feature-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Audit first official AcousticBrainz archive
+        run: python audit_acoustic_sample.py
+      - name: Upload feature coverage report only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: corpaciao-mtg-acoustic-coverage
+          path: acoustic_audit/ACOUSTIC_AUDIT.json
+          if-no-files-found: warn
+          retention-days: 14

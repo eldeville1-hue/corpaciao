@@ -23,7 +23,7 @@ def main():
     expected=dict((n,h) for h,n in rows)[name]
     genre=get(BASE+"autotagging_genre.tsv",15_000_000).decode("utf-8-sig")
     genre_rows=list(csv.reader(io.StringIO(genre),delimiter="\t"))
-    ids={r[0] for r in genre_rows if len(r)>=6 and r[0].strip().isdigit()}
+    ids={str(int(r[0].removeprefix("track_"))) for r in genre_rows if len(r)>=6 and re.fullmatch(r"(?:track_)?[0-9]+",r[0].strip())}
     report={"archive":name,"expected_sha256":expected,"official_archives_in_manifest":len(rows),
             "cohort_track_ids":len(ids),"max_download_bytes":MAX_BYTES,
             "results_are":"feature availability/coverage, not recommendation outcomes"}

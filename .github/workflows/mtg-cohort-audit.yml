@@ -1,6 +1,10 @@
 name: CORPACIAO external genre cohort audit
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/mtg-cohort-audit.yml'
 permissions:
   contents: read
 jobs:

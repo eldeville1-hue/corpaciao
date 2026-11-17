@@ -1,0 +1,56 @@
+name: CORPACIAO full external acoustic feature extraction
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/mtg-full-features.yml'
+permissions:
+  contents: read
+jobs:
+  extract:
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify official archives and extract fixed numeric features
+        run: python extract_acoustic_features.py --shard ${{ matrix.shard }} --shards 10 --out acoustic_output
+      - name: Upload compact shard data
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: acoustic-shard-${{ matrix.shard }}
+          path: acoustic_output/
+          if-no-files-found: warn
+          retention-days: 7
+  merge:
+    needs: extract
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: acoustic-shard-*
+          path: acoustic_output
+          merge-multiple: true
+      - name: Join to official track/artist metadata and audit completeness
+        run: python merge_acoustic_features.py
+      - name: Upload merged dataset and verified coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: corpaciao-mtg-full-acoustic-features
+          path: |
+            merged_acoustic/FEATURE_COVERAGE_REPORT.json
+            merged_acoustic/acoustic_features_joined.csv
+          retention-days: 14

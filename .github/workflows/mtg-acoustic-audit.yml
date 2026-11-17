@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/mtg-acoustic-audit.yml'
+      - 'audit_acoustic_sample.py'
 permissions:
   contents: read
 jobs:

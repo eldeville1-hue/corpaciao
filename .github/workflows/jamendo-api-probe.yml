@@ -1,0 +1,26 @@
+name: CORPACIAO Jamendo stats API feasibility
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/jamendo-api-probe.yml'
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Test five track IDs with Jamendo's documented testing client ID
+        run: python jamendo_api_probe.py
+      - name: Export schema and ID-matching diagnostic only
+        uses: actions/upload-artifact@v4
+        with:
+          name: corpaciao-jamendo-api-feasibility
+          path: jamendo_api_probe/API_FEASIBILITY.json
+          retention-days: 14

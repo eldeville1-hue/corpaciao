@@ -1,0 +1,40 @@
+name: CORPACIAO external genre cohort audit
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Test audit implementation
+        run: python test_audit.py
+      - name: Download official MTG-Jamendo genre metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p data
+          curl --fail --location --retry 3 --connect-timeout 20 --max-time 600 \
+            --output data/autotagging_genre.tsv \
+            'https://raw.githubusercontent.com/MTG/mtg-jamendo-dataset/master/data/autotagging_genre.tsv'
+          test "$(wc -c < data/autotagging_genre.tsv)" -gt 100000
+          sha256sum data/autotagging_genre.tsv | tee metadata_sha256.txt
+      - name: Audit actual track and artist cohorts
+        run: python audit_cohorts.py --genre data/autotagging_genre.tsv --out audit_output --seed 314159
+      - name: Upload cohort results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: corpaciao-mtg-cohort-audit
+          path: |
+            audit_output/COHORT_AUDIT.json
+            audit_output/cohorts.csv
+            metadata_sha256.txt
+          if-no-files-found: warn
+          retention-days: 14

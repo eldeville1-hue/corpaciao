@@ -1,0 +1,59 @@
+name: CORPACIAO 5.2 bounded measured-statistics pilot
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/jamendo-pilot-52.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  extract:
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0,1,2,3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Recover verified acoustic feature catalog
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p input
+          gh run download 44115559873 --repo "${{ github.repository }}" --name corpaciao-mtg-full-acoustic-features --dir input
+          test -s input/acoustic_features_joined.csv
+      - name: Acquire modest, reproducible research sample
+        env:
+          JAMENDO_CLIENT_ID: ${{ secrets.JAMENDO_CLIENT_ID }}
+        run: python jamendo_pilot_52.py --shard ${{ matrix.shard }}
+      - name: Preserve audit even on failed API responses
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: corpaciao-pilot52-shard-${{ matrix.shard }}
+          path: pilot52/
+          retention-days: 14
+          if-no-files-found: warn
+  report:
+    needs: extract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: corpaciao-pilot52-shard-*
+          path: pilot52_shards/
+          merge-multiple: true
+      - name: Calculate cohort missingness and data provenance
+        run: python merge_pilot_52.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: corpaciao-pilot52-final
+          path: pilot52_final/
+          retention-days: 14

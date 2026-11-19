@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/jamendo-authenticated-probe.yml'
+      - 'jamendo_credential_probe.py'
 permissions:
   contents: read
 jobs:

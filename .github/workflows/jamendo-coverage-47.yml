@@ -1,0 +1,40 @@
+name: CORPACIAO 4.7 random-catalog and missingness audit
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/jamendo-coverage-47.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Recover frozen source and prior coverage artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p input prior
+          gh run download 44115559873 --repo "${{ github.repository }}" --name corpaciao-mtg-full-acoustic-features --dir input
+          gh run download 44623630794 --repo "${{ github.repository }}" --name corpaciao-jamendo-coverage-46 --dir prior
+          test -s input/acoustic_features_joined.csv
+          test -s prior/track_coverage.csv
+      - name: Run real-data, authenticated coverage and missingness tests
+        env:
+          JAMENDO_CLIENT_ID: ${{ secrets.JAMENDO_CLIENT_ID }}
+        run: python jamendo_coverage_47.py
+      - name: Preserve source-level coverage and error audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: corpaciao-jamendo-coverage-47
+          path: coverage_47/
+          if-no-files-found: warn
+          retention-days: 14

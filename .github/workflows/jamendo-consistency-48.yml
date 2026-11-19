@@ -1,0 +1,39 @@
+name: CORPACIAO 4.8 Jamendo API retrieval consistency
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/jamendo-consistency-48.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Recover frozen 4.7 rechecks
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p prior47
+          gh run download 44624249924 --repo "${{ github.repository }}" --name corpaciao-jamendo-coverage-47 --dir prior47
+          test -s prior47/prior_missing_typed.csv
+          test -s prior47/prior_missing_untyped.csv
+      - name: Run paired single-versus-batch retrieval study
+        env:
+          JAMENDO_CLIENT_ID: ${{ secrets.JAMENDO_CLIENT_ID }}
+        run: python jamendo_consistency_48.py
+      - name: Archive paired responses and audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: corpaciao-jamendo-consistency-48
+          path: consistency_48/
+          retention-days: 14
+          if-no-files-found: warn

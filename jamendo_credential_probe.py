@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 """Five-track Jamendo research feasibility with private GitHub secret."""
 import datetime,json,os,pathlib,urllib.request,urllib.parse
+LISTEN_COUNT_FIELD = 'rate_listened_total'
+
+
 def has_listen_count(stats):
     if not isinstance(stats, dict):
         return False
-    count = stats.get('listens_total')
+    count = stats.get(LISTEN_COUNT_FIELD)
     return ((type(count) is int and count >= 0)
             or (isinstance(count, str) and count.isascii() and count.isdecimal()))
 
@@ -13,6 +16,7 @@ ids=['1133100','1375200','1273900','101900','1333600']
 client_id=os.environ.get('JAMENDO_CLIENT_ID','').strip()
 if not client_id: raise SystemExit('Missing JAMENDO_CLIENT_ID secret')
 report={'purpose':'5-track API permission and track-ID / stats coverage check','track_ids':ids,
+        'listen_count_field':LISTEN_COUNT_FIELD,
         'timestamp_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(), 'results':[],
         'confirmatory_recommendation_evaluation':False,'bulk_access':False}
 for t in ids:

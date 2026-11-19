@@ -1,6 +1,10 @@
 name: CORPACIAO Jamendo authenticated metadata feasibility
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/jamendo-authenticated-probe.yml'
 permissions:
   contents: read
 jobs:

@@ -1,0 +1,42 @@
+name: CORPACIAO 5.0 fresh-catalog retrieval validation
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/jamendo-validation-50.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Recover source and prior sample manifests
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p input prior46 prior47
+          gh run download 44115559873 --repo "${{ github.repository }}" --name corpaciao-mtg-full-acoustic-features --dir input
+          gh run download 44623630794 --repo "${{ github.repository }}" --name corpaciao-jamendo-coverage-46 --dir prior46
+          gh run download 44624249924 --repo "${{ github.repository }}" --name corpaciao-jamendo-coverage-47 --dir prior47
+          test -s input/acoustic_features_joined.csv
+          test -s prior46/sample_manifest.csv
+          test -s prior47/catalog_random_400.csv
+      - name: Run counterbalanced paired retrieval validation
+        env:
+          JAMENDO_CLIENT_ID: ${{ secrets.JAMENDO_CLIENT_ID }}
+        run: python jamendo_validation_50.py
+      - name: Preserve complete audit and sampled metadata
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: corpaciao-retrieval-validation-50
+          path: retrieval_50/
+          retention-days: 14
+          if-no-files-found: warn

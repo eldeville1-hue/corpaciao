@@ -1,0 +1,38 @@
+name: CORPACIAO 4.9 documented-parameter retrieval consistency
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/jamendo-consistency-49.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Recover frozen 4.8 IDs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p prior48
+          gh run download 44624834432 --repo "${{ github.repository }}" --name corpaciao-jamendo-consistency-48 --dir prior48
+          test -s prior48/sample_manifest.csv
+      - name: Compare fixed ID retrieval under documented type semantics
+        env:
+          JAMENDO_CLIENT_ID: ${{ secrets.JAMENDO_CLIENT_ID }}
+        run: python jamendo_consistency_49.py
+      - name: Export retrieval audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: corpaciao-jamendo-consistency-49
+          path: consistency_49/
+          retention-days: 14
+          if-no-files-found: warn

@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/jamendo-consistency-49.yml'
+      - 'jamendo_consistency_49.py'
 permissions:
   contents: read
   actions: read

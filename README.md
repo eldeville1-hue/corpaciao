@@ -1,10 +1,12 @@
+<p align="center"><img src="docs/assets/corpaciao-cover.svg" width="100%" alt="CORPACIAO — research, digital culture and interactive design" /></p>
+
 # CORPACIAO
 
 **An independent collection of interactive studies at the intersection of research, design, and culture.** This repository contains browser-based editorial experiences and a reproducible Python dataset-audit exercise.
 
 **[Explore the website](https://eldeville1-hue.github.io/corpaciao/)** · **[Night Sky Atlas](https://eldeville1-hue.github.io/corpaciao/night-sky-atlas/)** · **[History of Colors](https://eldeville1-hue.github.io/corpaciao/history-of-colors/)**
 
-## Projects
+## Selected work
 
 | Experience | Source | What it demonstrates |
 | --- | --- | --- |

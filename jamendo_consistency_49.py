@@ -59,9 +59,9 @@ for cycle in (1,2):
     order=ids[:];rng.shuffle(order)
     # same exact ids and type filter across all arms
     batch20=[order[i:i+20] for i in range(0,60,20)]
-    batch60=[order]
+    batch40=[order[:40],order[40:]]
     single=[[x] for x in order]
-    arms=[("single",single),("batch20",batch20),("batch60",batch60),("explicit_id_order",batch20)]
+    arms=[("single",single),("batch20",batch20),("batch40",batch40),("explicit_id_order",batch20)]
     if cycle==2:arms.reverse()
     for kind,batches in arms:
         run_config(kind,batches,cycle)
@@ -70,7 +70,7 @@ with (ROOT/"observations.csv").open("w",newline="",encoding="utf8") as f:
     fields=["cycle","kind","track_id","batch_n","status","stats_present","rate_listened_total"]
     w=csv.DictWriter(f,fieldnames=fields);w.writeheader();w.writerows(records)
 with (ROOT/"request_headers.json").open("w",encoding="utf8") as f:json.dump(requests,f,indent=2)
-kinds=["single","batch20","batch60","explicit_id_order"]
+kinds=["single","batch20","batch40","explicit_id_order"]
 summaries=[];repeat=[]
 for kind in kinds:
     a={r["track_id"]:r for r in records if r["kind"]==kind and r["cycle"]==1}

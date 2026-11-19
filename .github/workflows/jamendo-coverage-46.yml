@@ -1,0 +1,38 @@
+name: CORPACIAO 4.6 stratified Jamendo statistics coverage
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/jamendo-coverage-46.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Reuse previously verified feature table
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p input
+          gh run download 44115559873 --repo "${{ github.repository }}" --name corpaciao-mtg-full-acoustic-features --dir input
+          test -s input/acoustic_features_joined.csv
+      - name: Run small, authenticated, artist-separated coverage sample
+        env:
+          JAMENDO_CLIENT_ID: ${{ secrets.JAMENDO_CLIENT_ID }}
+        run: python jamendo_coverage_46.py
+      - name: Upload audited report and sampled metadata only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: corpaciao-jamendo-coverage-46
+          path: jamendo_coverage_46/
+          if-no-files-found: warn
+          retention-days: 14

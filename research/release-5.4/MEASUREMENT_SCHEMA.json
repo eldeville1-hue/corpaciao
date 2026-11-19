@@ -1,0 +1,81 @@
+{
+  "version": "5.4",
+  "status": "DRAFT_NOT_COLLECTING",
+  "source_catalog_size": 55213,
+  "id_key": "track_id",
+  "fields": [
+    {
+      "name": "track_id",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "artist_id",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "genre_cohort",
+      "type": "enum",
+      "values": [
+        "experimental_only",
+        "electronic_only",
+        "both",
+        "other"
+      ],
+      "required": true
+    },
+    {
+      "name": "request_status",
+      "type": "enum",
+      "values": [
+        "returned",
+        "not_returned",
+        "request_failed"
+      ],
+      "required": true
+    },
+    {
+      "name": "stats_status",
+      "type": "enum",
+      "values": [
+        "numeric_valid",
+        "stats_missing",
+        "not_applicable"
+      ],
+      "required": true
+    },
+    {
+      "name": "rate_listened_total",
+      "type": "number|null",
+      "required": false,
+      "description": "API metric not yet validated as raw listen counts"
+    },
+    {
+      "name": "rate_downloads_total",
+      "type": "number|null",
+      "required": false
+    },
+    {
+      "name": "measured_utc",
+      "type": "ISO8601",
+      "required": true
+    },
+    {
+      "name": "collection_batch",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "protocol_commit_sha",
+      "type": "string",
+      "required": true
+    }
+  ],
+  "invariants": [
+    "No missing track or failed request treated as zero popularity",
+    "Never publish disallowed track-level statistics",
+    "Never merge failed and nonreturned responses",
+    "No confirmatory popularity reranking before permission and validity gates"
+  ]
+}

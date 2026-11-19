@@ -19,7 +19,8 @@ for t in ids:
             result=data['results'][0];stats=result.get('stats')
             row.update(returned_track_id=str(result.get('id')),id_matches=str(result.get('id'))==t,
                 stats_fields=sorted(stats) if isinstance(stats,dict) else [],
-                listens_total=stats.get('listens_total') if isinstance(stats,dict) else None,
+                rate_listened_total=stats.get('rate_listened_total') if isinstance(stats,dict) else None,
+                rate_downloads_total=stats.get('rate_downloads_total') if isinstance(stats,dict) else None,
                 stats_present=isinstance(stats,dict))
     except Exception as e:row['request_failed']=str(e)[:300]
     report['results'].append(row)

@@ -1,0 +1,41 @@
+name: CORPACIAO 5.9 acoustic feature ablations
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/acoustic-ablation-59.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  ablation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Recover actual verified acoustic features
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p input
+          gh run download 44115559873 --repo "${{ github.repository }}" --name corpaciao-mtg-full-acoustic-features --dir input
+          test -s input/acoustic_features_joined.csv
+      - name: Install numeric library
+        run: python -m pip install numpy==2.2.6
+      - name: Run exact acoustic feature ablation
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: python acoustic_ablation_59.py
+      - name: Save actual data outputs even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: corpaciao-acoustic-ablation-59
+          path: ablation_59/
+          if-no-files-found: warn
+          retention-days: 14

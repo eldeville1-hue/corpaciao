@@ -1,0 +1,49 @@
+name: CORPACIAO 6.2 cross-task independent label evaluation
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cross-task-evaluation-62.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  transfer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Recover frozen models and feature catalog
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p input prior60 prior61 labels
+          gh run download 44115559873 --repo "${{ github.repository }}" --name corpaciao-mtg-full-acoustic-features --dir input
+          gh run download 45927274022 --repo "${{ github.repository }}" --name corpaciao-acoustic-benchmark-60 --dir prior60
+          gh run download 45927573678 --repo "${{ github.repository }}" --name corpaciao-acoustic-supervised-61 --dir prior61
+          test -s prior60/per_query_cosine_z.csv
+          test -s prior61/per_query_supervised_ridge.csv
+      - name: Download official separate annotation tasks (not Jamendo API)
+        run: |
+          curl -fsSL --retry 2 -o labels/autotagging_instrument.tsv https://raw.githubusercontent.com/MTG/mtg-jamendo-dataset/master/data/autotagging_instrument.tsv
+          curl -fsSL --retry 2 -o labels/autotagging_moodtheme.tsv https://raw.githubusercontent.com/MTG/mtg-jamendo-dataset/master/data/autotagging_moodtheme.tsv
+          test -s labels/autotagging_instrument.tsv
+          test -s labels/autotagging_moodtheme.tsv
+      - name: Install numpy
+        run: python -m pip install numpy==2.2.6
+      - name: Compute frozen ranking transfer diagnostics
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+        run: python cross_task_evaluation_62.py
+      - name: Archive audit outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: corpaciao-cross-task-evaluation-62
+          path: transfer62/
+          retention-days: 14
+          if-no-files-found: warn

@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/acoustic-ablation-59.yml'
+      - 'acoustic_ablation_59.py'
 permissions:
   contents: read
   actions: read

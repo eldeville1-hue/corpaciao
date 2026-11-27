@@ -111,7 +111,7 @@ def metrics(name):
         "cohorts":{c:round(float(np.mean([r["agreement"] for r in rows if r["cohort"]==c])),5) for c in quotas}}
 summary=[metrics(x) for x in names]
 # Cluster bootstrap paired difference by query artist, no test-data tuning.
-artists=sorted({r["query_artist"] for r in queries})
+artists=sorted({r["artist"] for r in queries})
 indices=collections.defaultdict(list)
 for j,r in enumerate(queries):indices[r["artist"]].append(j)
 boot=random.Random(202611295901)

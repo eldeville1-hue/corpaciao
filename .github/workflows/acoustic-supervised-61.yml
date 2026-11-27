@@ -1,0 +1,45 @@
+name: CORPACIAO 6.1 supervised content baseline and reproducibility audit
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/acoustic-supervised-61.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  experiment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Recover acoustic catalog and frozen prior rankings
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p input prior59 prior60
+          gh run download 44115559873 --repo "${{ github.repository }}" --name corpaciao-mtg-full-acoustic-features --dir input
+          gh run download 45926532856 --repo "${{ github.repository }}" --name corpaciao-acoustic-ablation-59 --dir prior59
+          gh run download 45927274022 --repo "${{ github.repository }}" --name corpaciao-acoustic-benchmark-60 --dir prior60
+          test -s input/acoustic_features_joined.csv
+          test -s prior59/per_query_full28.csv
+          test -s prior60/per_query_cosine_z.csv
+      - name: Install numeric and learning packages
+        run: python -m pip install numpy==2.2.6 scipy==1.15.3 scikit-learn==1.6.1
+      - name: Fit training-only genre-content model and audit ranking stability
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: python acoustic_supervised_61.py
+      - name: Preserve real outputs even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: corpaciao-acoustic-supervised-61
+          path: research61/
+          retention-days: 14
+          if-no-files-found: warn

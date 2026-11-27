@@ -1,0 +1,43 @@
+name: CORPACIAO 6.0 independent metric baselines
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/acoustic-benchmark-60.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Recover source feature catalog and frozen 5.9 query set
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p input prior59
+          gh run download 44115559873 --repo "${{ github.repository }}" --name corpaciao-mtg-full-acoustic-features --dir input
+          gh run download 45926532856 --repo "${{ github.repository }}" --name corpaciao-acoustic-ablation-59 --dir prior59
+          test -s input/acoustic_features_joined.csv
+          test -s prior59/per_query_full28.csv
+      - name: Install numeric libraries
+        run: python -m pip install numpy==2.2.6 scipy==1.15.3
+      - name: Compare exact methods on same 800 queries
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: python acoustic_benchmark_60.py
+      - name: Upload full result audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: corpaciao-acoustic-benchmark-60
+          path: benchmark_60/
+          retention-days: 14
+          if-no-files-found: warn
